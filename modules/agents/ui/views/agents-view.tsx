@@ -1,3 +1,7 @@
+"use client"
+import { ResponsiveDialog } from "@/components/responsive-dialog";
+import { Button } from "@/components/ui/button";
+
 interface Agent {
   id: string;
   name: string;
@@ -14,7 +18,7 @@ interface AgentsViewProps {
 export const AgentsView = ({ agents }: AgentsViewProps) => {
   return (
     <div>
-      <pre>{JSON.stringify(agents, null, 2)}</pre>
+         <pre>{JSON.stringify(agents, null, 2)}</pre>
     </div>
   );
 };
