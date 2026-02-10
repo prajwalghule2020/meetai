@@ -20,7 +20,7 @@ export default async function Pages() {
   return(
   <>
   <AgentsListHeader/>
-  <AgentsView agents={agents} />
+  <AgentsView data={agents} />
   </> 
   
 
