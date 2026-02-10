@@ -1,24 +1,23 @@
 "use client"
-import { ResponsiveDialog } from "@/components/responsive-dialog";
-import { Button } from "@/components/ui/button";
 
-interface Agent {
-  id: string;
-  name: string;
-  userId: string;
-  instructions: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { DataTable } from "../components/data-table"
+import { columns, Agent } from "../components/columns"
+import { EmptyState } from "@/components/empty-state"
 
 interface AgentsViewProps {
-  agents: Agent[];
+  data: Agent[];
 }
 
-export const AgentsView = ({ agents }: AgentsViewProps) => {
+export const AgentsView = ({ data }: AgentsViewProps) => {
   return (
-    <div>
-         <pre>{JSON.stringify(agents, null, 2)}</pre>
+    <div className="flex-1 pb-4 px-4 md:px-8 flex flex-col gap-y-4">
+      <DataTable data={data} columns={columns} />
+      {data.length === 0 && (
+        <EmptyState
+          title="Create your first agent"
+          description="Create an agent to join your meetings. Each agent will follow your instructions and can interact with participants during the call."
+        />
+      )}
     </div>
   );
 };

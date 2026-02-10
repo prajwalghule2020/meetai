@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { agentInsertSchema } from "../schema";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and, getTableColumns, sql } from "drizzle-orm";
 
 export const protectedProcedure = async () => {
   const session = await auth.api.getSession({
@@ -19,17 +19,31 @@ export const protectedProcedure = async () => {
 };
 
 export const getManyAgent = async () => {
-  await protectedProcedure();
-  const data = await db.select().from(agents);
+  const ctx = await protectedProcedure();
+  const data = await db
+    .select({
+      ...getTableColumns(agents),
+      meetingCount: sql<number>`5`,
+    })
+    .from(agents)
+    .where(eq(agents.userId, ctx.auth.user.id));
   return data;
 };
 
-const getOneAgentSchema = z.object({ id: z.string() });
+const getOneAgentSchema = z.object({
+  id: z.string().min(1, { message: "Agent ID is required" }),
+});
 
 export const getOneAgent = async (input: z.infer<typeof getOneAgentSchema>) => {
-  await protectedProcedure();
+  const ctx = await protectedProcedure();
   const { id } = getOneAgentSchema.parse(input);
-  const [existingAgent] = await db.select().from(agents).where(eq(agents.id, id));
+  const [existingAgent] = await db
+    .select({
+      ...getTableColumns(agents),
+      meetingCount: sql<number>`5`,
+    })
+    .from(agents)
+    .where(and(eq(agents.id, id), eq(agents.userId, ctx.auth.user.id)));
 
   return existingAgent;
 };
