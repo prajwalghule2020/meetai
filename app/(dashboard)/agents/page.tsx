@@ -1,5 +1,4 @@
 import { AgentsView } from "@/modules/agents/ui/views/agents-view";
-import { fetchAgents } from "@/modules/agents/server/actions";
 import { AgentsListHeader } from "@/modules/agents/ui/components/agents-list-header";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -15,12 +14,10 @@ export default async function Pages() {
       redirect("/sign-in");
     }
 
-  const agents = await fetchAgents();
-
   return(
   <>
   <AgentsListHeader/>
-  <AgentsView data={agents} />
+  <AgentsView />
   </> 
   
 

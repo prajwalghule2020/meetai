@@ -4,8 +4,14 @@ import { getManyAgent, createAgent, getOneAgent } from "./procedure";
 import { agentInsertSchema } from "../schema";
 import { z } from "zod";
 
-export async function fetchAgents() {
-  return await getManyAgent();
+interface FetchAgentsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string | null;
+}
+
+export async function fetchAgents(params?: FetchAgentsParams) {
+  return await getManyAgent(params);
 }
 
 export async function createAgentAction(input: z.infer<typeof agentInsertSchema>) {
