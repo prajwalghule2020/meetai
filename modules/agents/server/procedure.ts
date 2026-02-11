@@ -4,7 +4,13 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { agentInsertSchema } from "../schema";
 import { z } from "zod";
-import { eq, and, getTableColumns, sql } from "drizzle-orm";
+import { eq, and, getTableColumns, sql, ilike, count, desc } from "drizzle-orm";
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+  MIN_PAGE_SIZE,
+} from "../constants";
 
 export const protectedProcedure = async () => {
   const session = await auth.api.getSession({
@@ -18,16 +24,46 @@ export const protectedProcedure = async () => {
   return { auth: session };
 };
 
-export const getManyAgent = async () => {
+const getManyAgentSchema = z.object({
+  page: z.number().optional().default(DEFAULT_PAGE),
+  pageSize: z.number().min(MIN_PAGE_SIZE).max(MAX_PAGE_SIZE).optional().default(DEFAULT_PAGE_SIZE),
+  search: z.string().nullish(),
+});
+
+export const getManyAgent = async (input?: z.input<typeof getManyAgentSchema>) => {
   const ctx = await protectedProcedure();
-  const data = await db
-    .select({
-      ...getTableColumns(agents),
-      meetingCount: sql<number>`5`,
-    })
-    .from(agents)
-    .where(eq(agents.userId, ctx.auth.user.id));
-  return data;
+  const { page, pageSize, search } = getManyAgentSchema.parse(input ?? {});
+
+  const whereCondition = and(
+    eq(agents.userId, ctx.auth.user.id),
+    search ? ilike(agents.name, `%${search}%`) : undefined,
+  );
+
+  // Run both queries in parallel to reduce connection time
+  const [data, [total]] = await Promise.all([
+    db
+      .select({
+        ...getTableColumns(agents),
+        meetingCount: sql<number>`5`,
+      })
+      .from(agents)
+      .where(whereCondition)
+      .orderBy(desc(agents.createdAt), desc(agents.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+    db
+      .select({ count: count() })
+      .from(agents)
+      .where(whereCondition),
+  ]);
+
+  const totalPages = Math.ceil(total.count / pageSize);
+
+  return {
+    items: data,
+    total: total.count,
+    totalPages,
+  };
 };
 
 const getOneAgentSchema = z.object({
