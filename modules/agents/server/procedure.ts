@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { agents } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { agentInsertSchema } from "../schema";
+import { agentInsertSchema, agentUpdateSchema } from "../schema";
 import { z } from "zod";
 import { eq, and, getTableColumns, sql, ilike, count, desc } from "drizzle-orm";
 import {
@@ -101,4 +101,51 @@ export const createAgent = async (input: z.infer<typeof agentInsertSchema>) => {
     .returning();
 
   return createdAgent;
+};
+
+export const updateAgent = async (input: z.infer<typeof agentUpdateSchema>) => {
+  const ctx = await protectedProcedure();
+  const validatedInput = agentUpdateSchema.parse(input);
+
+  const [updatedAgent] = await db
+    .update(agents)
+    .set(validatedInput)
+    .where(
+      and(
+        eq(agents.id, validatedInput.id),
+        eq(agents.userId, ctx.auth.user.id),
+      )
+    )
+    .returning();
+
+  if (!updatedAgent) {
+    throw new Error("Agent not found");
+  }
+
+  return updatedAgent;
+};
+
+const removeAgentSchema = z.object({
+  id: z.string().min(1, { message: "Agent ID is required" }),
+});
+
+export const removeAgent = async (input: z.infer<typeof removeAgentSchema>) => {
+  const ctx = await protectedProcedure();
+  const { id } = removeAgentSchema.parse(input);
+
+  const [removedAgent] = await db
+    .delete(agents)
+    .where(
+      and(
+        eq(agents.id, id),
+        eq(agents.userId, ctx.auth.user.id),
+      )
+    )
+    .returning();
+
+  if (!removedAgent) {
+    throw new Error("Agent not found");
+  }
+
+  return removedAgent;
 };

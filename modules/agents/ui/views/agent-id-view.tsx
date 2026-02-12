@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { fetchOneAgent } from "../../server/actions";
+import { fetchOneAgent, removeAgentAction } from "../../server/actions";
 import { LoadingState } from "@/components/loading-state";
 import { ErrorState } from "@/components/error-state";
 import { AgentIdViewHeader } from "../components/agent-id-view-header";
@@ -9,15 +9,47 @@ import { GeneratedAvatar } from "@/components/generated-avatar";
 import { Badge } from "@/components/ui/badge";
 import { VideoIcon } from "lucide-react";
 import { Agent } from "../components/columns";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useMutation } from "@/hooks/use-mutation";
+import { useConfirm } from "@/hooks/use-confirm";
+import { UpdateAgentDialog } from "../components/update-agent-dialog";
 
 interface AgentIdViewProps {
   agentId: string;
-}
+} 
 
 export const AgentIdView = ({ agentId }: AgentIdViewProps) => {
   const [data, setData] = useState<Agent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const router = useRouter();
+
+  const removeAgent = useMutation({
+    mutationFn: (input: { id: string }) => removeAgentAction(input.id),
+    onSuccess: () => {
+      toast.success("Agent removed successfully");
+      // TODO: Invalidate free tier usage
+      router.push("/agents");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const [RemoveConfirmation, confirmRemove] = useConfirm(
+    "Are you sure?",
+    `The following action will remove ${data?.meetingCount} associated meetings`,
+  );
+
+  const handleRemoveAgent = async () => {
+    const ok = await confirmRemove();
+
+    if (!ok) return;
+
+    await removeAgent.mutateAsync({ id: agentId });
+  };
 
   const loadAgent = useCallback(async () => {
     setIsLoading(true);
@@ -44,13 +76,24 @@ export const AgentIdView = ({ agentId }: AgentIdViewProps) => {
     return <ErrorState title="Error loading agent" description={error.message} />;
   }
 
+  if (!data) {
+    return <ErrorState title="Agent not found" description="No agent data available" />;
+  }
+
   return (
+    <>
+    <RemoveConfirmation />
+    <UpdateAgentDialog
+      open={isEditOpen}
+      onOpenChange={setIsEditOpen}
+      initialValues={data}
+    />
     <div className="flex-1 py-4 px-4 md:px-8 flex flex-col gap-y-4">
       <AgentIdViewHeader
       agentId = {agentId}
       agentName = {data.name}
-      onEdit={()=>{}}
-      onRemove = {()=>{}} 
+      onEdit={() => setIsEditOpen(true)}
+      onRemove={handleRemoveAgent} 
       />
       <div className="bg-white rounded-lg border">
         <div className="px-4 py-5 gap-y-5 flex flex-col col-span-5">
@@ -73,5 +116,6 @@ export const AgentIdView = ({ agentId }: AgentIdViewProps) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
