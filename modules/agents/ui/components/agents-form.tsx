@@ -1,10 +1,10 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { agentInsertSchema } from "../../schema";
+import { agentInsertSchema, agentUpdateSchema } from "../../schema";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createAgentAction } from "../../server/actions";
+import { createAgentAction, updateAgentAction } from "../../server/actions";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,11 @@ import { useRouter } from "next/navigation";
 interface AgentFormProps {
     onSuccess?: () => void;
     onCancel?: () => void;
-    initialValues?: any;
+    initialValues?: {
+        id: string;
+        name: string;
+        instructions: string;
+    };
 }
 
 export const AgentForm = ({
@@ -41,9 +45,8 @@ export const AgentForm = ({
     const onSubmit = (values: z.infer<typeof agentInsertSchema>) => {
         startTransition(async () => {
             try {
-                if (isEdit) {
-                    // TODO: updateAgent
-                    console.log("TODO: updateAgent");
+                if (isEdit && initialValues?.id) {
+                    await updateAgentAction({ ...values, id: initialValues.id });
                 } else {
                     await createAgentAction(values);
                 }
