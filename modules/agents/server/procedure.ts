@@ -81,6 +81,10 @@ export const getOneAgent = async (input: z.infer<typeof getOneAgentSchema>) => {
     .from(agents)
     .where(and(eq(agents.id, id), eq(agents.userId, ctx.auth.user.id)));
 
+  if (!existingAgent) {
+    throw new Error("NOT_FOUND");
+  }
+
   return existingAgent;
 };
 
