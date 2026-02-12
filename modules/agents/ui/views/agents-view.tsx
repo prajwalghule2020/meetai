@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { DataTable } from "../components/data-table"
 import { columns, Agent } from "../components/columns"
 import { EmptyState } from "@/components/empty-state"
@@ -10,6 +11,7 @@ import { useAgentsFilters } from "../../hooks/use-agents-filters"
 import { fetchAgents } from "../../server/actions"
 
 export const AgentsView = () => {
+  const router = useRouter();
   const [filters , setFilters] = useAgentsFilters();
   const [data, setData] = useState<Agent[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -53,7 +55,11 @@ export const AgentsView = () => {
 
   return (
     <div className="flex-1 pb-4 px-4 md:px-8 flex flex-col gap-y-4">
-      <DataTable data={data} columns={columns} />
+      <DataTable
+        data={data}
+        columns={columns}
+        onRowClick={(row) => router.push(`/agents/${row.id}`)}
+      />
       <DataPagination
         page={filters.page}
         totalPages={totalPages}
