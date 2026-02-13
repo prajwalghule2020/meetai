@@ -1,6 +1,8 @@
 "use server";
 
-import { getManyMeeting, getOneMeeting } from "./procedure";
+import { getManyMeeting, getOneMeeting, createMeeting } from "./procedure";
+import { meetingInsertSchema } from "../schema";
+import { z } from "zod";
 
 interface FetchMeetingsParams {
   page?: number;
@@ -13,4 +15,10 @@ export async function fetchMeetings(params?: FetchMeetingsParams) {
 
 export async function fetchOneMeeting(id: string) {
   return await getOneMeeting({ id });
+}
+
+export async function createMeetingAction(
+  input: z.infer<typeof meetingInsertSchema>,
+) {
+  return await createMeeting(input);
 }
