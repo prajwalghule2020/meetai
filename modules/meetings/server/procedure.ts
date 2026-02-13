@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { eq, and, getTableColumns, count, desc } from "drizzle-orm";
+import { meetingInsertSchema } from "../schema";
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -89,4 +90,21 @@ export const getOneMeeting = async (
   }
 
   return existingMeeting;
+};
+
+export const createMeeting = async (
+  input: z.infer<typeof meetingInsertSchema>,
+) => {
+  const ctx = await protectedProcedure();
+  const validatedInput = meetingInsertSchema.parse(input);
+
+  const [createdMeeting] = await db
+    .insert(meetings)
+    .values({
+      ...validatedInput,
+      userId: ctx.auth.user.id,
+    })
+    .returning();
+
+  return createdMeeting;
 };

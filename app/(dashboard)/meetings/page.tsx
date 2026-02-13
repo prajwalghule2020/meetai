@@ -1,4 +1,5 @@
 import { MeetingsView } from "@/modules/meetings/views/meeting-view";
+import { MeetingsListHeader } from "@/modules/meetings/ui/components/meetings-list-header";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -15,5 +16,10 @@ export default async function Page() {
 
   const initialData = await fetchMeetings();
 
-  return <MeetingsView initialData={initialData} />;
+  return (
+    <>
+      <MeetingsListHeader />
+      <MeetingsView initialData={initialData} />
+    </>
+  );
 }
