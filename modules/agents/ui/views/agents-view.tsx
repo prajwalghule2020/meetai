@@ -10,6 +10,7 @@ import { DataPagination } from "../components/data-pagination"
 import { useAgentsFilters } from "../../hooks/use-agents-filters"
 import { fetchAgents } from "../../server/actions"
 
+
 export const AgentsView = () => {
   const router = useRouter();
   const [filters , setFilters] = useAgentsFilters();
