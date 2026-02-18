@@ -3,7 +3,7 @@ import { agents, meetings } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { eq, and, getTableColumns, count, desc } from "drizzle-orm";
+import { eq, and, getTableColumns, count, desc , sql } from "drizzle-orm";
 import { meetingInsertSchema } from "../schema";
 import {
   DEFAULT_PAGE,
@@ -47,6 +47,7 @@ export const getManyMeeting = async (
       .select({
         ...getTableColumns(meetings),
         agent: agents,
+        duration: sql<number>`EXTRACT(EPOCH FROM (ended_at - started_at))`.as("duration"),
       })
       .from(meetings)
       .innerJoin(agents, eq(meetings.agentId, agents.id))

@@ -9,6 +9,8 @@ interface FetchMeetingsParams {
   pageSize?: number;
 }
 
+export type MeetingGetMany = Awaited<ReturnType<typeof fetchMeetings>>["items"];
+
 export async function fetchMeetings(params?: FetchMeetingsParams) {
   return await getManyMeeting(params);
 }
